@@ -1,4 +1,4 @@
-# Name: Conway's game of life
+# Name: Fire simulation
 # Dimensions: 2
 
 # --- Set up executable path, do not edit ---
@@ -39,7 +39,13 @@ def setup(args):
     # ---THE CA MUST BE RELOADED IN THE GUI IF ANY OF THE BELOW ARE CHANGED---
     config.title = "Fire simulation"
     config.dimensions = 2
-    config.states = (0, 1)
+
+    # 0 = burnt
+    # 1, 2, 3, 4 = water, chaparral, canyon, forest
+    # 5 -> 14 = burn states (counting down)
+    config.states = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
+
+    config.wrap = False
     # ------------------------------------------------------------------------
 
     # ---- Override the defaults below (these may be changed at anytime) ----
