@@ -91,7 +91,7 @@ def setup(args):
 
     config.set_initial_grid(base_grid)
 
-    config.num_generations = 300
+    config.num_generations = 600
 
     config.wrap = False
     # ------------------------------------------------------------------------
@@ -114,13 +114,24 @@ def main():
     # Open the config object
     config = setup(sys.argv[1:])
 
-    chaparral_pos = np.where(config.initial_grid == 2)
-    canyon_pos = np.where(config.initial_grid == 3)
-    forest_pos = np.where(config.initial_grid == 4)
 
     decaygrid = np.zeros(config.grid_dims)
     decaygrid.fill(1)
+
+    """
+    chaparral_post = (config.initial_grid == 2)
+    decaygrid[chaparral_post] = np.random.random_integers(10, 25)
+        
+    canyon_post = (config.initial_grid == 3)
+    decaygrid[canyon_post] = np.random.random_integers(1, 4)
     
+    forest_post = (config.initial_grid == 4)
+    decaygrid[forest_post] = np.random.random_integers(70, 200)
+    """
+
+    chaparral_pos = np.where(config.initial_grid == 2)
+    canyon_pos = np.where(config.initial_grid == 3)
+    forest_pos = np.where(config.initial_grid == 4)
 
     x, y = chaparral_pos
     for i in range(len(x)):
