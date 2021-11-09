@@ -31,6 +31,16 @@ def transition_func(grid, neighbourstates, neighbourcounts, decaygrid):
 
     burnt, water, chaparral, canyon, forest, burning = neighbourcounts
 
+    chaparral_to_burn = (burning >= 2) & (grid == 2)
+    canyon_to_burn = (burning >= 1) & (grid == 3)
+    forest_to_burn = (burning >= 3) & (grid == 4)
+
+    grid[chaparral_to_burn | canyon_to_burn | forest_to_burn] = 5
+
+    grid[decayed_to_zero] = 0
+
+
+
     """
         # dead = state == 0, live = state == 1
         # unpack state counts for state 0 and state 1
@@ -61,6 +71,28 @@ def setup(args):
     # 5 = burning
     config.states = (0, 1, 2, 3, 4, 5)
 
+    config.state_colors = [(0,0,0), (0.243, 0.686, 0.980), (0.902, 0.725, 0.325), 
+                            (0.388, 0.275, 0), (0.114, 0.310, 0.055), (0.820, 0.4007, 0.059)]
+
+    config.grid_dims = (200,200)
+
+    base_grid = np.full(config.grid_dims, 2)
+
+    base_grid[60:80, 30:40] = 1
+    base_grid[130:140, 120:180] = 1
+
+    base_grid[20:180, 50:60] = 3
+
+    base_grid[80:160, 40:50] = 4
+    base_grid[20:120, 60:80] = 4
+    base_grid[100:120, 80:200] = 4
+
+    base_grid[79:81, 19:21] = 5
+
+    config.set_initial_grid(base_grid)
+
+    config.num_generations = 300
+
     config.wrap = False
     # ------------------------------------------------------------------------
 
@@ -68,7 +100,6 @@ def setup(args):
 
     # config.state_colors = [(0,0,0),(1,1,1)]
     # config.num_generations = 150
-    # config.grid_dims = (200,200)
 
     # ----------------------------------------------------------------------
 
@@ -83,8 +114,26 @@ def main():
     # Open the config object
     config = setup(sys.argv[1:])
 
+    chaparral_pos = np.where(config.initial_grid == 2)
+    canyon_pos = np.where(config.initial_grid == 3)
+    forest_pos = np.where(config.initial_grid == 4)
+
     decaygrid = np.zeros(config.grid_dims)
-    decaygrid.fill(5)
+    decaygrid.fill(1)
+    
+
+    x, y = chaparral_pos
+    for i in range(len(x)):
+        decaygrid[x[i], y[i]] = np.random.randint(10, 25)
+
+    x, y = canyon_pos
+    for i in range(len(x)):
+        decaygrid[x[i], y[i]] = np.random.randint(1, 4)
+
+    x, y = forest_pos
+    for i in range(len(x)):
+        decaygrid[x[i], y[i]] = np.random.randint(70, 200)
+
 
     # Create grid object
     grid = Grid2D(config, (transition_func, decaygrid))
