@@ -31,34 +31,21 @@ def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid
 
     burning = neighbourcounts[5]
 
+    #Increases countgrid value when next to a burning cell
     next_to_burning = (burning >= 1)
     countgrid[next_to_burning] += 1
 
+    #Finds cells that will burn in next step based on number of buring neighbours
+    # and how long its been next to something burning
     chaparral_to_burn = (burning >= 2) & (grid == 2) & (countgrid >= 2)
     canyon_to_burn = (burning >= 1) & (grid == 3)
     forest_to_burn = (burning >= 3) & (grid == 4) & (countgrid >= 4)
 
-
+    #Sets cells in the grid to burning
     grid[chaparral_to_burn | canyon_to_burn | forest_to_burn] = 5
 
     grid[decayed_to_zero] = 0
 
-
-
-    """
-        # dead = state == 0, live = state == 1
-        # unpack state counts for state 0 and state 1
-        dead_neighbours, live_neighbours = neighbourcounts
-        # create boolean arrays for the birth & survival rules
-        # if 3 live neighbours and is dead -> cell born
-        birth = (live_neighbours == 3) & (grid == 0)
-        # if 2 or 3 live neighbours and is alive -> survives
-        survive = ((live_neighbours == 2) | (live_neighbours == 3)) & (grid == 1)
-        # Set all cells to 0 (dead)
-        grid[:, :] = 0
-        # Set cells to 1 where either cell is born or survives
-        grid[birth | survive] = 1
-    """
     
     return grid
 
@@ -81,7 +68,7 @@ def setup(args):
     config.grid_dims = (200,200)
 
     base_grid = np.full(config.grid_dims, 2)
-
+    #Sets initial blocks of different materials in grid
     base_grid[60:80, 30:40] = 1
     base_grid[130:140, 120:180] = 1
 
@@ -98,14 +85,6 @@ def setup(args):
     config.num_generations = 600
 
     config.wrap = False
-    # ------------------------------------------------------------------------
-
-    # ---- Override the defaults below (these may be changed at anytime) ----
-
-    # config.state_colors = [(0,0,0),(1,1,1)]
-    # config.num_generations = 150
-
-    # ----------------------------------------------------------------------
 
     if len(args) == 2:
         config.save()
@@ -122,17 +101,7 @@ def main():
     decaygrid = np.zeros(config.grid_dims)
     decaygrid.fill(3)
 
-    """
-    chaparral_post = (config.initial_grid == 2)
-    decaygrid[chaparral_post] = np.random.random_integers(10, 25)
-        
-    canyon_post = (config.initial_grid == 3)
-    decaygrid[canyon_post] = np.random.random_integers(1, 4)
-    
-    forest_post = (config.initial_grid == 4)
-    decaygrid[forest_post] = np.random.random_integers(70, 200)
-    """
-
+    #Sets decaygrid values based on what medium that cell is
     chaparral_pos = np.where(config.initial_grid == 2)
     canyon_pos = np.where(config.initial_grid == 3)
     forest_pos = np.where(config.initial_grid == 4)
