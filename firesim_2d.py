@@ -17,7 +17,7 @@ import capyle.utils as utils
 import numpy as np
 
 
-def transition_func(grid, neighbourstates, neighbourcounts, decaygrid):
+def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid):
 
     #Gets burning cells from grid
     buring_cells = (grid == 5)
@@ -29,11 +29,15 @@ def transition_func(grid, neighbourstates, neighbourcounts, decaygrid):
     #Sets cells that have fully decayed to burnt 
     grid[decayed_to_zero] = 0
 
-    burnt, water, chaparral, canyon, forest, burning = neighbourcounts
+    burning = neighbourcounts[5]
 
-    chaparral_to_burn = (burning >= 2) & (grid == 2)
+    next_to_burning = (burning >= 1)
+    countgrid[next_to_burning] += 1
+
+    chaparral_to_burn = (burning >= 2) & (grid == 2) & (countgrid >= 2)
     canyon_to_burn = (burning >= 1) & (grid == 3)
-    forest_to_burn = (burning >= 3) & (grid == 4)
+    forest_to_burn = (burning >= 3) & (grid == 4) & (countgrid >= 4)
+
 
     grid[chaparral_to_burn | canyon_to_burn | forest_to_burn] = 5
 
@@ -116,7 +120,7 @@ def main():
 
 
     decaygrid = np.zeros(config.grid_dims)
-    decaygrid.fill(1)
+    decaygrid.fill(3)
 
     """
     chaparral_post = (config.initial_grid == 2)
@@ -139,15 +143,17 @@ def main():
 
     x, y = canyon_pos
     for i in range(len(x)):
-        decaygrid[x[i], y[i]] = np.random.randint(1, 4)
+        decaygrid[x[i], y[i]] = np.random.randint(2, 5)
 
     x, y = forest_pos
     for i in range(len(x)):
         decaygrid[x[i], y[i]] = np.random.randint(70, 200)
 
 
+    countgrid = np.zeros(config.grid_dims)
+
     # Create grid object
-    grid = Grid2D(config, (transition_func, decaygrid))
+    grid = Grid2D(config, (transition_func, decaygrid, countgrid))
 
     # Run the CA, save grid state every generation to timeline
     timeline = grid.run()
