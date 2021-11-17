@@ -36,6 +36,7 @@ def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid
     
     if WIND_DIRECTION == "":
         down_wind_burning = neighbourcounts[5]
+
     else:
         down_wind_burning = np.zeros((200,200))
         up_wind_burning = np.zeros((200,200))
@@ -61,12 +62,16 @@ def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid
     temp = (SW == 5)
     up_wind_burning[temp] += 1
 
+    #adding random chance of catching fire
+    burning_neighbors = neighbourcounts[5]
+    rndNum = np.random.randint(1, 6)
 
     #Increases countgrid value when next to a burning cell
-    next_to_burning = ((down_wind_burning + up_wind_burning) >= 1)
+    #added random chance of catching fir if rnd number > burning cells in nieghbourhood
+    next_to_burning = (((down_wind_burning + up_wind_burning) >= 1) & (rndNum > burning_neighbors))
     countgrid[next_to_burning] += 1
 
-    
+
     #Assigns cells to be burnt based on number of buring neighbours
     #and number of generations it has been next to a buring cell
     chaparral_to_burn = (down_wind_burning >= 2) & (grid == 2) & (countgrid >= 1) | (up_wind_burning >= 2) & (grid == 2) & (countgrid >= 2)
@@ -90,10 +95,8 @@ def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid
 
     #Sets cells in the grid to burning
     grid[chaparral_to_burn | canyon_to_burn | forest_to_burn] = 5
-
     grid[decayed_to_zero] = 0
 
-    
     return grid
 
 
