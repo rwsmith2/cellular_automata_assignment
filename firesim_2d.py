@@ -19,6 +19,8 @@ import numpy as np
 
 def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid):
 
+    WIND_DIRECTION = "S"
+
     #Gets burning cells from grid
     buring_cells = (grid == 5)
     #Reduces decay val by 1 for the buring cells
@@ -29,17 +31,62 @@ def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid
     #Sets cells that have fully decayed to burnt 
     grid[decayed_to_zero] = 0
 
-    burning = neighbourcounts[5]
+    #burning = neighbourcounts[5]
+
+    
+    if WIND_DIRECTION == "":
+        down_wind_burning = neighbourcounts[5]
+    else:
+        down_wind_burning = np.zeros((200,200))
+        up_wind_burning = np.zeros((200,200))
+    
+
+    NW, N, NE, W, E, SW, S, SE = neighbourstates
+
+    temp = (N == 5)
+    down_wind_burning[temp] += 1
+    temp = (NE == 5)
+    down_wind_burning[temp] += 1
+    temp = (E == 5)
+    down_wind_burning[temp] += 1
+    temp = (SE == 5)
+    down_wind_burning[temp] += 1
+    temp = (NW == 5)
+    down_wind_burning[temp] += 1
+
+    temp = (W == 5)
+    up_wind_burning[temp] += 1
+    temp = (S == 5)
+    up_wind_burning[temp] += 1
+    temp = (SW == 5)
+    up_wind_burning[temp] += 1
+
 
     #Increases countgrid value when next to a burning cell
-    next_to_burning = (burning >= 1)
+    next_to_burning = ((down_wind_burning + up_wind_burning) >= 1)
     countgrid[next_to_burning] += 1
 
-    #Finds cells that will burn in next step based on number of buring neighbours
-    # and how long its been next to something burning
-    chaparral_to_burn = (burning >= 2) & (grid == 2) & (countgrid >= 2)
+    
+    #Assigns cells to be burnt based on number of buring neighbours
+    #and number of generations it has been next to a buring cell
+    chaparral_to_burn = (down_wind_burning >= 2) & (grid == 2) & (countgrid >= 1) | (up_wind_burning >= 2) & (grid == 2) & (countgrid >= 2)
+    canyon_to_burn = (down_wind_burning >= 1) & (grid == 3) | (up_wind_burning >= 1) & (grid == 3)
+    forest_to_burn = (down_wind_burning >= 3) & (grid == 4) & (countgrid >= 2) | (up_wind_burning >= 3) & (grid == 4) & (countgrid >= 4)
+
+    """
+    #Assigns cells to be burnt based on number of buring neighbours
+    chaparral_to_burn = (burning >= 2) & (grid == 2)
     canyon_to_burn = (burning >= 1) & (grid == 3)
-    forest_to_burn = (burning >= 3) & (grid == 4) & (countgrid >= 4)
+    forest_to_burn = (burning >= 3) & (grid == 4)
+    """
+
+    """
+    #Assigns cells to be burnt based on number of generations it has been next to a buring cell
+    chaparral_to_burn = (burning >= 1) & (grid == 2) & (countgrid >= 2)
+    canyon_to_burn = (burning >= 1) & (grid == 3)
+    forest_to_burn = (burning >= 1) & (grid == 4) & (countgrid >= 4)
+    """
+
 
     #Sets cells in the grid to burning
     grid[chaparral_to_burn | canyon_to_burn | forest_to_burn] = 5
