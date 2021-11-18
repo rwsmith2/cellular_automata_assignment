@@ -71,6 +71,10 @@ def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid
     next_to_burning = (((down_wind_burning + up_wind_burning) >= 1) & (rndNum > burning_neighbors))
     countgrid[next_to_burning] += 1
 
+    #water resistance -> cells near water are less likely to catch fire
+    water_neighbors = neighbourcounts[1]
+    near_water = (water_neighbors >= 2)
+    countgrid[near_water] -= 1
 
     #Assigns cells to be burnt based on number of buring neighbours
     #and number of generations it has been next to a buring cell
