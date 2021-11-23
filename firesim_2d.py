@@ -19,7 +19,6 @@ import numpy as np
 
 def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid):
 
-    WIND_DIRECTION = "S"
 
     #Gets burning cells from grid
     buring_cells = (grid == 5)
@@ -31,71 +30,52 @@ def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid
     #Sets cells that have fully decayed to burnt 
     grid[decayed_to_zero] = 0
 
-    #burning = neighbourcounts[5]
-
-    
-    if WIND_DIRECTION == "":
-        down_wind_burning = neighbourcounts[5]
-
-    else:
-        down_wind_burning = np.zeros((200,200))
-        up_wind_burning = np.zeros((200,200))
-    
-
-    NW, N, NE, W, E, SW, S, SE = neighbourstates
-
-    temp = (N == 5)
-    down_wind_burning[temp] += 1
-    temp = (NE == 5)
-    down_wind_burning[temp] += 1
-    temp = (E == 5)
-    down_wind_burning[temp] += 1
-    temp = (SE == 5)
-    down_wind_burning[temp] += 1
-    temp = (NW == 5)
-    down_wind_burning[temp] += 1
-
-    temp = (W == 5)
-    up_wind_burning[temp] += 1
-    temp = (S == 5)
-    up_wind_burning[temp] += 1
-    temp = (SW == 5)
-    up_wind_burning[temp] += 1
-
     #adding random chance of catching fire
     burning_neighbors = neighbourcounts[5]
-    rndNum = np.random.randint(1, 6)
+    rndNum = np.random.randint(0, 50)
 
     #Increases countgrid value when next to a burning cell
-    #added random chance of catching fir if rnd number > burning cells in nieghbourhood
-    next_to_burning = (((down_wind_burning + up_wind_burning) >= 1) & (rndNum > burning_neighbors))
-    countgrid[next_to_burning] += 1
+    burning_1 = (neighbourcounts[5] == 1)
+    burning_2 = (neighbourcounts[5] == 2)
+    burning_3 = (neighbourcounts[5] == 3)
+    burning_4 = (neighbourcounts[5] >= 4)
+    countgrid[burning_1] += 1
+    countgrid[burning_2] += 2
+    countgrid[burning_3] += 3
+    countgrid[burning_4] += 4
 
     #water resistance -> cells near water are less likely to catch fire
     water_neighbors = neighbourcounts[1]
-    near_water = (water_neighbors >= 2)
-    countgrid[near_water] -= 1
+    near_water = (water_neighbors >= 2) & (neighbourcounts[5] > 0)
+    countgrid[near_water] -= 2.5
+
+    #wind aspect
+    wind_grid = np.zeros((200,200))
+    NW, N, NE, W, E, SW, S, SE = neighbourstates
+
+    temp = (N == 5)
+    wind_grid [temp] += 1
+    temp = (NE == 5)
+    wind_grid [temp] +=2
+    temp = (E == 5)
+    wind_grid [temp] += 1
+    temp = (S == 5)
+    wind_grid [temp] -= 1
+    temp = (SW == 5)
+    wind_grid [temp] -= 2
+    temp = (W == 5)
+    wind_grid [temp] -= 1
+
+    wind_strong = (wind_grid >= 3)
+    wind_resistance = (wind_grid < -1)
+    countgrid[wind_strong] += 1
+    countgrid[wind_resistance] -= 1.5
 
     #Assigns cells to be burnt based on number of buring neighbours
     #and number of generations it has been next to a buring cell
-    chaparral_to_burn = (down_wind_burning >= 2) & (grid == 2) & (countgrid >= 1) | (up_wind_burning >= 2) & (grid == 2) & (countgrid >= 2)
-    canyon_to_burn = (down_wind_burning >= 1) & (grid == 3) | (up_wind_burning >= 1) & (grid == 3)
-    forest_to_burn = (down_wind_burning >= 3) & (grid == 4) & (countgrid >= 2) | (up_wind_burning >= 3) & (grid == 4) & (countgrid >= 4)
-
-    """
-    #Assigns cells to be burnt based on number of buring neighbours
-    chaparral_to_burn = (burning >= 2) & (grid == 2)
-    canyon_to_burn = (burning >= 1) & (grid == 3)
-    forest_to_burn = (burning >= 3) & (grid == 4)
-    """
-
-    """
-    #Assigns cells to be burnt based on number of generations it has been next to a buring cell
-    chaparral_to_burn = (burning >= 1) & (grid == 2) & (countgrid >= 2)
-    canyon_to_burn = (burning >= 1) & (grid == 3)
-    forest_to_burn = (burning >= 1) & (grid == 4) & (countgrid >= 4)
-    """
-
+    chaparral_to_burn =  (grid == 2) & (countgrid >= 5)
+    canyon_to_burn =  (grid == 3) & (countgrid >= 2)
+    forest_to_burn = (grid == 4) & (countgrid >= 15)
 
     #Sets cells in the grid to burning
     grid[chaparral_to_burn | canyon_to_burn | forest_to_burn] = 5
@@ -114,10 +94,10 @@ def setup(args):
     # 0 = burnt
     # 1, 2, 3, 4 = water, chaparral, canyon, forest
     # 5 = burning
-    config.states = (0, 1, 2, 3, 4, 5)
+    config.states = (0, 1, 2, 3, 4, 5, 6)
 
     config.state_colors = [(0,0,0), (0.243, 0.686, 0.980), (0.902, 0.725, 0.325), 
-                            (0.388, 0.275, 0), (0.114, 0.310, 0.055), (0.820, 0.4007, 0.059)]
+                            (0.388, 0.275, 0), (0.114, 0.310, 0.055), (0.820, 0.4007, 0.059),(0.628, 0.628, 0.628) ]
 
     config.grid_dims = (200,200)
 
@@ -134,9 +114,11 @@ def setup(args):
 
     base_grid[79:81, 19:21] = 5
 
+    base_grid[145:150, 110:115] = 6
+
     config.set_initial_grid(base_grid)
 
-    config.num_generations = 600
+    config.num_generations = 1000
 
     config.wrap = False
 
