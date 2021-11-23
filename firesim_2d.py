@@ -53,18 +53,39 @@ def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid
     wind_grid = np.zeros((200,200))
     NW, N, NE, W, E, SW, S, SE = neighbourstates
 
+    WIND_DIRECTION = "SW"
+
+    #wind weights for S, SW, W, NW, N, NE, E, SE
+    wind_directions = ["S", "SW", "W", "NW", "N", "NE", "E", "SE"]
+   
+    wind_weights = [[-2, -1, 0, 1, 2, 1, 0, -1],
+                    [-1, -2, -1, 0, 1, 2, 1, 0],
+                    [0, -1, -2, -1, 0, 1, 2, 1],
+                    [1, 0, -1, -2, -1, 0, 1, 2],
+                    [2, 1, 0, -1, -2, -1, 0 ,1],
+                    [1, 2, 1, 0, -1, -2, -1, 0],
+                    [0, 1, 2, 1, 0, -1, -2, -1],
+                    [-1, 0, 1, 2, 1, 0, -1, -2]]
+                    
+
+    weight = wind_weights[wind_directions.index(WIND_DIRECTION)]    
+
     temp = (N == 5)
-    wind_grid [temp] += 1
+    wind_grid [temp] += weight[4]
     temp = (NE == 5)
-    wind_grid [temp] +=2
+    wind_grid [temp] += weight[5]
     temp = (E == 5)
-    wind_grid [temp] += 1
+    wind_grid [temp] += weight[6]
+    temp = (SE == 5)
+    wind_grid [temp] += weight[7]
     temp = (S == 5)
-    wind_grid [temp] -= 1
+    wind_grid [temp] += weight[0]
     temp = (SW == 5)
-    wind_grid [temp] -= 2
+    wind_grid [temp] += weight[1]
     temp = (W == 5)
-    wind_grid [temp] -= 1
+    wind_grid [temp] += weight[2]
+    temp = (NW == 5)
+    wind_grid [temp] += weight[3]
 
     wind_strong = (wind_grid >= 3)
     wind_resistance = (wind_grid < -1)
@@ -73,9 +94,13 @@ def transition_func(grid, neighbourstates, neighbourcounts, decaygrid, countgrid
 
     #Assigns cells to be burnt based on number of buring neighbours
     #and number of generations it has been next to a buring cell
+    #chaparral_to_burn =  (grid == 2) & (countgrid >= 5)
+    #canyon_to_burn =  (grid == 3) & (countgrid >= 2)
+    #forest_to_burn = (grid == 4) & (countgrid >= 15)
+
     chaparral_to_burn =  (grid == 2) & (countgrid >= 5)
-    canyon_to_burn =  (grid == 3) & (countgrid >= 2)
-    forest_to_burn = (grid == 4) & (countgrid >= 15)
+    canyon_to_burn =  (grid == 3) & (countgrid >= 1)
+    forest_to_burn = (grid == 4) & (countgrid >= 40)
 
     #Sets cells in the grid to burning
     grid[chaparral_to_burn | canyon_to_burn | forest_to_burn] = 5
@@ -114,7 +139,9 @@ def setup(args):
 
     base_grid[79:81, 19:21] = 5
 
-    base_grid[145:150, 110:115] = 6
+    base_grid[79:81, 179:181] = 5
+
+    base_grid[150:160, 100:110] = 6
 
     config.set_initial_grid(base_grid)
 
@@ -142,17 +169,19 @@ def main():
     canyon_pos = np.where(config.initial_grid == 3)
     forest_pos = np.where(config.initial_grid == 4)
 
+
+    #Assuming one step is 5 hours
     x, y = chaparral_pos
     for i in range(len(x)):
-        decaygrid[x[i], y[i]] = np.random.randint(10, 25)
+        decaygrid[x[i], y[i]] = np.random.randint(8, 20)
 
     x, y = canyon_pos
     for i in range(len(x)):
-        decaygrid[x[i], y[i]] = np.random.randint(2, 5)
+        decaygrid[x[i], y[i]] = np.random.randint(1, 3)
 
     x, y = forest_pos
     for i in range(len(x)):
-        decaygrid[x[i], y[i]] = np.random.randint(70, 200)
+        decaygrid[x[i], y[i]] = np.random.randint(33, 200)
 
 
     countgrid = np.zeros(config.grid_dims)
